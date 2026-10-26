@@ -1,0 +1,75 @@
+{
+    "Stacks": [
+        {
+            "StackId": "arn:aws:cloudformation:us-west-2:522029196131:stack/cs79c-ha-web-server/4e8cd3a0-d04c-11f1-b78e-062b536bb711",
+            "StackName": "cs79c-ha-web-server",
+            "Description": "Highly available web server using ALB, EC2 Auto Scaling, and CloudWatch",
+            "Parameters": [
+                {
+                    "ParameterKey": "PublicSubnet2",
+                    "ParameterValue": "subnet-0722cd4d98d849ce0"
+                },
+                {
+                    "ParameterKey": "VpcId",
+                    "ParameterValue": "vpc-0ab08e6f42f8bf191"
+                },
+                {
+                    "ParameterKey": "InstanceType",
+                    "ParameterValue": "t3.micro"
+                },
+                {
+                    "ParameterKey": "LatestAmiId",
+                    "ParameterValue": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+                    "ResolvedValue": "ami-0829b74b2a8c619b7"
+                },
+                {
+                    "ParameterKey": "PublicSubnet1",
+                    "ParameterValue": "subnet-00b5b86cc610a1429"
+                }
+            ],
+            "CreationTime": "2026-10-25T08:15:57.984000+00:00",
+            "LastUpdatedTime": "2026-10-25T11:51:32.446000+00:00",
+            "RollbackConfiguration": {},
+            "StackStatus": "UPDATE_COMPLETE",
+            "DisableRollback": false,
+            "DeploymentConfig": {
+                "Mode": "STANDARD",
+                "DisableRollback": false
+            },
+            "NotificationARNs": [],
+            "Outputs": [
+                {
+                    "OutputKey": "TargetGroupARN",
+                    "OutputValue": "arn:aws:elasticloadbalancing:us-west-2:522029196131:targetgroup/cs79c-ha-web-tg/80fe304472866fa6",
+                    "Description": "Target group used for EC2 health checks"
+                },
+                {
+                    "OutputKey": "WebsiteURL",
+                    "OutputValue": "http://cs79c-ha-alb-453738805.us-west-2.elb.amazonaws.com",
+                    "Description": "Open this URL to visit the web application"
+                },
+                {
+                    "OutputKey": "AutoScalingGroupName",
+                    "OutputValue": "cs79c-ha-web-asg",
+                    "Description": "Name of the Auto Scaling group"
+                },
+                {
+                    "OutputKey": "LoadBalancerDNS",
+                    "OutputValue": "cs79c-ha-alb-453738805.us-west-2.elb.amazonaws.com",
+                    "Description": "Public DNS name of the Application Load Balancer"
+                }
+            ],
+            "Tags": [],
+            "EnableTerminationProtection": false,
+            "DriftInformation": {
+                "StackDriftStatus": "NOT_CHECKED"
+            },
+            "LastOperations": [
+                {
+                    "OperationType": "UPDATE_STACK",
+                    "OperationId": "6c1062c0-d06a-11f1-91dd-020708c932fd"
+                }
+            ]
+        }
+    ]
+}

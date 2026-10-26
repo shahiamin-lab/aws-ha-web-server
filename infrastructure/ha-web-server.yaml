@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Highly available web server using ALB, EC2 Auto Scaling, and CloudWatch
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Default: vpc-0ab08e6f42f8bf191
+    Description: Existing default VPC
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-00b5b86cc610a1429
+    Description: First subnet in us-west-2a
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-0722cd4d98d849ce0
+    Description: Second subnet in us-west-2b
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+    Description: EC2 instance size
+
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: Latest Amazon Linux 2023 x86_64 AMI
+
+Resources:
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow public HTTP traffic to the load balancer
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: cs79c-ha-alb-sg
+
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP only from the load balancer
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: cs79c-ha-web-sg
+
+  WebTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: cs79c-ha-web-tg
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher:
+        HttpCode: '200'
+      Tags:
+        - Key: Project
+          Value: cs79c-ha-web-server
+
+  WebLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: cs79c-ha-alb
+      Type: application
+      Scheme: internet-facing
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
+      Tags:
+        - Key: Project
+          Value: cs79c-ha-web-server
+
+  WebListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref WebLoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WebTargetGroup
+
+  WebLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: cs79c-ha-web-lt
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: !Ref InstanceType
+        SecurityGroupIds:
+          - !Ref WebServerSecurityGroup
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpTokens: required
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            dnf install -y httpd
+            systemctl enable --now httpd
+
+            TOKEN=$(curl -s -X PUT \
+              "http://169.254.169.254/latest/api/token" \
+              -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+            INSTANCE_ID=$(curl -s \
+              -H "X-aws-ec2-metadata-token: $TOKEN" \
+              http://169.254.169.254/latest/meta-data/instance-id)
+
+            AZ=$(curl -s \
+              -H "X-aws-ec2-metadata-token: $TOKEN" \
+              http://169.254.169.254/latest/meta-data/placement/availability-zone)
+
+            cat > /var/www/html/index.html <<HTML
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>AWS High Availability Capstone</title>
+              <style>
+                body { font-family: Arial; margin: 50px; background: #f4f7fb; }
+                main { background: white; padding: 30px; border-radius: 12px; }
+                h1 { color: #1f5a94; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <h1>AWS Highly Available Web Server</h1>
+                <p>This website is hosted on Amazon EC2.</p>
+                <p>Project: AWS Cloud Architecture Capstone</p>
+                <p>Created by: Amin Shahi</p>
+                <p>Instance ID: $INSTANCE_ID</p>
+                <p>Availability Zone: $AZ</p>
+                <p>Load balancing and health checks are enabled.</p>
+              </main>
+            </body>
+            </html>
+            HTML
+
+  WebAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: WebListener
+    Properties:
+      AutoScalingGroupName: cs79c-ha-web-asg
+      VPCZoneIdentifier:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WebLaunchTemplate
+        Version: !GetAtt WebLaunchTemplate.LatestVersionNumber
+      MinSize: '2'
+      MaxSize: '4'
+      DesiredCapacity: '2'
+      TargetGroupARNs:
+        - !Ref WebTargetGroup
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 180
+      DefaultInstanceWarmup: 180
+      Tags:
+        - Key: Name
+          Value: cs79c-ha-web
+          PropagateAtLaunch: true
+        - Key: Project
+          Value: cs79c-ha-web-server
+          PropagateAtLaunch: true
+
+  WebCpuScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref WebAutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 50.0
+        DisableScaleIn: false
+
+  LowHealthyInstanceAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: cs79c-ha-low-inservice-instances
+      AlarmDescription: Alarm if fewer than two instances are in service
+      Namespace: AWS/AutoScaling
+      MetricName: GroupInServiceInstances
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebAutoScalingGroup
+      Statistic: Minimum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 2
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+
+Outputs:
+  WebsiteURL:
+    Description: Open this URL to visit the web application
+    Value: !Sub 'http://${WebLoadBalancer.DNSName}'
+
+  LoadBalancerDNS:
+    Description: Public DNS name of the Application Load Balancer
+    Value: !GetAtt WebLoadBalancer.DNSName
+
+  AutoScalingGroupName:
+    Description: Name of the Auto Scaling group
+    Value: !Ref WebAutoScalingGroup
+
+  TargetGroupARN:
+    Description: Target group used for EC2 health checks
+    Value: !Ref WebTargetGroup

@@ -1,0 +1,125 @@
+{
+    "AutoScalingGroups": [
+        {
+            "AutoScalingGroupName": "cs79c-ha-web-asg",
+            "AutoScalingGroupARN": "arn:aws:autoscaling:us-west-2:522029196131:autoScalingGroup:7414559b-8fb3-4e8b-adee-b79c880091d1:autoScalingGroupName/cs79c-ha-web-asg",
+            "LaunchTemplate": {
+                "LaunchTemplateId": "lt-0dba68f3065426d17",
+                "LaunchTemplateName": "cs79c-ha-web-lt",
+                "Version": "3"
+            },
+            "MinSize": 2,
+            "MaxSize": 4,
+            "DesiredCapacity": 2,
+            "DefaultCooldown": 300,
+            "AvailabilityZones": [
+                "us-west-2a",
+                "us-west-2b"
+            ],
+            "AvailabilityZoneIds": [
+                "usw2-az2",
+                "usw2-az1"
+            ],
+            "LoadBalancerNames": [],
+            "TargetGroupARNs": [
+                "arn:aws:elasticloadbalancing:us-west-2:522029196131:targetgroup/cs79c-ha-web-tg/80fe304472866fa6"
+            ],
+            "HealthCheckType": "ELB",
+            "HealthCheckGracePeriod": 180,
+            "Instances": [
+                {
+                    "InstanceId": "i-0b1c07a4ff1658b4a",
+                    "InstanceType": "t3.micro",
+                    "AvailabilityZone": "us-west-2b",
+                    "AvailabilityZoneId": "usw2-az1",
+                    "LifecycleState": "InService",
+                    "HealthStatus": "Healthy",
+                    "LaunchTemplate": {
+                        "LaunchTemplateId": "lt-0dba68f3065426d17",
+                        "LaunchTemplateName": "cs79c-ha-web-lt",
+                        "Version": "3"
+                    },
+                    "ProtectedFromScaleIn": false
+                },
+                {
+                    "InstanceId": "i-0c4a7d4d368abc157",
+                    "InstanceType": "t3.micro",
+                    "AvailabilityZone": "us-west-2a",
+                    "AvailabilityZoneId": "usw2-az2",
+                    "LifecycleState": "InService",
+                    "HealthStatus": "Healthy",
+                    "LaunchTemplate": {
+                        "LaunchTemplateId": "lt-0dba68f3065426d17",
+                        "LaunchTemplateName": "cs79c-ha-web-lt",
+                        "Version": "3"
+                    },
+                    "ProtectedFromScaleIn": false
+                }
+            ],
+            "CreatedTime": "2026-10-25T08:18:22.066000+00:00",
+            "SuspendedProcesses": [],
+            "VPCZoneIdentifier": "subnet-00b5b86cc610a1429,subnet-0722cd4d98d849ce0",
+            "EnabledMetrics": [],
+            "Tags": [
+                {
+                    "ResourceId": "cs79c-ha-web-asg",
+                    "ResourceType": "auto-scaling-group",
+                    "Key": "Name",
+                    "Value": "cs79c-ha-web",
+                    "PropagateAtLaunch": true
+                },
+                {
+                    "ResourceId": "cs79c-ha-web-asg",
+                    "ResourceType": "auto-scaling-group",
+                    "Key": "Project",
+                    "Value": "cs79c-ha-web-server",
+                    "PropagateAtLaunch": true
+                },
+                {
+                    "ResourceId": "cs79c-ha-web-asg",
+                    "ResourceType": "auto-scaling-group",
+                    "Key": "aws:cloudformation:logical-id",
+                    "Value": "WebAutoScalingGroup",
+                    "PropagateAtLaunch": true
+                },
+                {
+                    "ResourceId": "cs79c-ha-web-asg",
+                    "ResourceType": "auto-scaling-group",
+                    "Key": "aws:cloudformation:stack-id",
+                    "Value": "arn:aws:cloudformation:us-west-2:522029196131:stack/cs79c-ha-web-server/4e8cd3a0-d04c-11f1-b78e-062b536bb711",
+                    "PropagateAtLaunch": true
+                },
+                {
+                    "ResourceId": "cs79c-ha-web-asg",
+                    "ResourceType": "auto-scaling-group",
+                    "Key": "aws:cloudformation:stack-name",
+                    "Value": "cs79c-ha-web-server",
+                    "PropagateAtLaunch": true
+                }
+            ],
+            "TerminationPolicies": [
+                "Default"
+            ],
+            "NewInstancesProtectedFromScaleIn": false,
+            "ServiceLinkedRoleARN": "arn:aws:iam::522029196131:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
+            "DefaultInstanceWarmup": 180,
+            "TrafficSources": [
+                {
+                    "Identifier": "arn:aws:elasticloadbalancing:us-west-2:522029196131:targetgroup/cs79c-ha-web-tg/80fe304472866fa6",
+                    "Type": "elbv2"
+                }
+            ],
+            "AvailabilityZoneDistribution": {
+                "CapacityDistributionStrategy": "balanced-best-effort"
+            },
+            "CapacityReservationSpecification": {
+                "CapacityReservationPreference": "default"
+            },
+            "InstanceLifecyclePolicy": {
+                "RetentionTriggers": {
+                    "TerminateHookAbandon": "terminate"
+                }
+            }
+        }
+    ]
+}
