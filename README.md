@@ -10,6 +10,21 @@ This project deploys a highly available web server on AWS using an Application L
 
 The web application displays the project title, author, EC2 instance ID, and Availability Zone. This helps demonstrate that requests are being served by instances distributed across multiple Availability Zones.
 
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+    U[Internet Users] -->|HTTP port 80| ALB[Application Load Balancer]
+    ALB --> TG[Target Group and Health Checks]
+    TG --> A[EC2 Instance - us-west-2a]
+    TG --> B[EC2 Instance - us-west-2b]
+    LT[Launch Template - Amazon Linux 2023 and Apache] --> ASG[Auto Scaling Group]
+    ASG --> A
+    ASG --> B
+    CPU[Target Tracking - CPU target 50%] --> ASG
+    CW[CloudWatch Alarm - fewer than 2 in-service instances] -. Monitors .-> ASG
+```
+
 ## Architecture
 
 1. A public Application Load Balancer receives HTTP requests on port 80.

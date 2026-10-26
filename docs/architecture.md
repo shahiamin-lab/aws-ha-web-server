@@ -16,6 +16,7 @@ flowchart TD
     ASG --> B
     CPU[Target Tracking - CPU target 50%] --> ASG
     CW[CloudWatch Alarm - fewer than 2 in-service instances] -. Monitors .-> ASG
+```
 
 ## Component Responsibilities
 
