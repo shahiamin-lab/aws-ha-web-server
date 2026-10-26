@@ -10,6 +10,21 @@ This project deploys a highly available web server using Amazon EC2, an Applicat
 
 ## 2. Architecture and Service Choices
 
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    U[Internet Users] -->|HTTP port 80| ALB[Application Load Balancer]
+    ALB --> TG[Target Group and Health Checks]
+    TG --> A[EC2 Instance - us-west-2a]
+    TG --> B[EC2 Instance - us-west-2b]
+    LT[Launch Template - Amazon Linux 2023 and Apache] --> ASG[Auto Scaling Group]
+    ASG --> A
+    ASG --> B
+    CPU[Target Tracking - CPU target 50%] --> ASG
+    CW[CloudWatch Alarm - fewer than 2 in-service instances] -. Monitors .-> ASG
+```
+
 Internet users send HTTP requests to the Application Load Balancer on port 80. The ALB forwards requests to a target group and performs health checks. The target group routes traffic to EC2 instances in two Availability Zones.
 
 The EC2 Auto Scaling group maintains a desired capacity of two instances, with a maximum capacity of four. A target-tracking scaling policy uses a 50% average CPU utilization target. A CloudWatch alarm monitors whether the number of in-service instances falls below two. CloudFormation provisions the infrastructure from the template in `infrastructure/ha-web-server.yaml`.
