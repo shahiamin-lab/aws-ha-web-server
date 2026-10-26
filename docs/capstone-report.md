@@ -40,9 +40,7 @@ The ALB distributes requests across healthy targets, while Auto Scaling can add 
 
 ### Cost Estimate and Optimization
 
-The following is an illustrative planning estimate, not a verified AWS Pricing Calculator result or actual Learner Lab charge. It assumes two small EC2 instances run continuously for approximately 730 hours per month, one ALB runs continuously, traffic is low, and no paid domain or TLS certificate is required. Actual cost depends on the selected instance type, ALB capacity units, public IPv4 charges, data transfer, CloudWatch usage, and regional pricing.
-
-Before production use, enter these assumptions in the AWS Pricing Calculator for US West (Oregon) and record the resulting monthly estimate: two EC2 instances, one Application Load Balancer, expected ALB capacity usage, CloudWatch alarms and metrics, public IPv4 addresses, and estimated outbound data transfer.
+The AWS Pricing Calculator estimate for US West (Oregon) is approximately $31.61 per month before discounts. It includes two Amazon EC2 t3.micro instances running for a combined 1,460 hours per month ($15.18) and one Application Load Balancer running for 730 hours ($16.43). The estimate is a partial planning estimate, not an actual AWS Academy Learner Lab charge. It excludes or may not fully account for public IPv4 addresses, data transfer, CloudWatch usage, storage, taxes, and other usage-dependent charges. Actual costs may vary.
 
 Two cost optimizations are to stop or delete non-production resources when they are not needed and to right-size EC2 capacity based on measured CPU and traffic. For production workloads, Savings Plans or Reserved Instances may reduce eligible compute costs when usage is predictable. The two-instance minimum should not be reduced without accepting the corresponding availability trade-off.
 
